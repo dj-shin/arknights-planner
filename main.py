@@ -16,10 +16,13 @@ def main():
     with open(config.REQUIREMENT_ITEMS, 'r') as f:
         requirement_items = json.load(f)
 
+    with open(config.CERT_TRANSFORM, 'r') as f:
+        cert_transform = json.load(f)
+
     print('== Requirement ==')
     print(requirement_items)
 
-    model = Optimizer(drop_summary, combine_transform, respawn_items, requirement_items)
+    model = Optimizer(drop_summary, combine_transform, cert_transform, respawn_items, requirement_items)
     model.solve()
     print('Status: ', model.status)
 
