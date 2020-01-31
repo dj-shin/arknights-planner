@@ -27,4 +27,6 @@
 
 ## Execute
 
+  - 파밍 목표, 자연재생 재화 정리
+    - `inputs/`에 있는 파일들 수정
   - `python main.py`
