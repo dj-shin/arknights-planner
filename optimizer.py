@@ -17,8 +17,15 @@ class Optimizer:
 
         area_actions = list(drop_summary.keys())
         combine_actions = list(combine_transform.keys())
-        cert_buy_actions = ['구매-{}-{}'.format(phase['phase'], item) for phase in cert_transform.values()
+
+        def cert_action_name(phase, item):
+            return '구매-{}-{}'.format(phase, item)
+
+        cert_buy_actions = [cert_action_name(phase['phase'], item) for phase in cert_transform.values()
                             for item in phase['items']]
+        actions = area_actions + combine_actions + cert_buy_actions
+
+        action_index = {action: i for i, action in enumerate(actions)}
 
         # generate matrix / vectors
         self.transform = [[drop_summary[action].get(resource, 0) for resource in resources] for action in area_actions]
@@ -42,15 +49,33 @@ class Optimizer:
         self._model = pulp.LpProblem('Resource optimization', pulp.LpMinimize)
         t = pulp.LpVariable('Days', lowBound=0)
 
-        vec = [pulp.LpVariable(action, lowBound=0) for action in area_actions + combine_actions + cert_buy_actions]
+        vec = [pulp.LpVariable(action, lowBound=0) for action in actions]
 
         self._model += t    # objective function: minimize t
         # satisfy resource requirements
         for j in range(len(self.resources)):
             self._model += t * self.respawn[j] +\
                     sum([vec[i] * self.transform[i][j]
-                        for i in range(len(area_actions) + len(combine_actions) + len(cert_buy_actions))])\
+                        for i in range(len(actions))])\
                     >= self.requirement[j]
+
+        # certificate shop requirements
+        DAYS_PER_MONTH = 30
+        for phase_name, phase in cert_transform.items():
+            phase_idx = phase['phase']
+            items = phase['items']
+            for item, buy_info in items.items():
+                v = vec[action_index[cert_action_name(phase_idx, item)]]
+                self._model += v <= t * buy_info['max'] / DAYS_PER_MONTH
+
+        low_items = cert_transform['1단계']['items']
+        high_items = cert_transform['2단계']['items']
+
+        for low_item, low_info in low_items.items():
+            for high_item, high_info in high_items.items():
+                v = vec[action_index[cert_action_name(2, high_item)]]
+                v_low = vec[action_index[cert_action_name(1, low_item)]]
+                self._model += v <= v_low * high_info['max'] / low_info['max']
 
     def validate(self, drop_summary, combine_transform, cert_transform, respawn_items, requirement_items):
         resources = self.resources
