@@ -48,8 +48,10 @@ class Optimizer:
         # modeling
         self._model = pulp.LpProblem('Resource optimization', pulp.LpMinimize)
         t = pulp.LpVariable('Days', lowBound=0)
+        self.t = t
 
         vec = [pulp.LpVariable(action, lowBound=0) for action in actions]
+        self.actions = vec
 
         self._model += t    # objective function: minimize t
         # satisfy resource requirements
@@ -109,3 +111,16 @@ class Optimizer:
     @property
     def variables(self):
         return self._model.variables()
+
+    def item_detail(self, item):
+        # find result of actions for given item
+        item_idx = self.resources.index(item)
+        result = list()
+        for i in range(len(self.actions)):
+            v = self.actions[i]
+            if not v.varValue:
+                continue
+            if abs(v.varValue * self.transform[i][item_idx]) > 1e-5:
+                result.append((v, self.transform[i][item_idx]))
+        result.append((self.t, self.respawn[item_idx]))
+        return result

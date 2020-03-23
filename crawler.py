@@ -26,8 +26,8 @@ def get_drops(stage_id, item_name_map):
 
 def crawl():
     stages = {
-        'main': {0: 11, 1: 12, 2: 10, 3: 8, 4: 10, },
-        'sub': {2: 12, 3: {1: 2, 2: 3, }, 4: {1: 3, 2: 3, 3: 3, 4: 1, }}
+        'main': {0: 11, 1: 12, 2: 10, 3: 8, 4: 10, 5: 10},
+        'sub': {2: 12, 3: {1: 2, 2: 3, }, 4: {1: 3, 2: 3, 3: 3, 4: 1, }, 5: {1: 2, 2: 2, 3: 2, 4: 2}}
     }
 
     with open(config.ITEM_NAME_MAP, 'rt') as f:
@@ -49,7 +49,9 @@ def crawl():
                         stage_ids.append(name)
 
     # GT event area
-    stage_ids += ['a001_{:02d}'.format(i + 1) for i in range(6)]
+    # stage_ids += ['a001_{:02d}'.format(i + 1) for i in range(6)]
+    # stage_ids += ['a003_{:02d}'.format(i + 1) for i in range(8)]
+    # stage_ids += ['a003_f{:02d}'.format(i + 1) for i in range(4)]
 
     actions = list()
     summary = dict()

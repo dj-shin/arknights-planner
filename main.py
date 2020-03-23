@@ -16,8 +16,14 @@ def main():
     with open(config.REQUIREMENT_ITEMS, 'r') as f:
         requirement_items = json.load(f)
 
+    with open(config.STORED_ITEMS, 'r') as f:
+        stored_items = json.load(f)
+
     with open(config.CERT_TRANSFORM, 'r') as f:
         cert_transform = json.load(f)
+
+    for k in stored_items:
+        requirement_items[k] = requirement_items.get(k, 0) - stored_items[k]
 
     print('== Requirement ==')
     print(requirement_items)
@@ -30,6 +36,18 @@ def main():
     for v in sorted(model.variables, key=lambda v: -v.varValue):
         if v.varValue > 1e-5:       # ignore unused (= inefficient) actions
             print(v.name, '=', v.varValue)
+
+    print('== Detail ==')
+    # for item in requirement_items:
+    for item in requirement_items:
+        print(item)
+        detail = model.item_detail(item)
+        total = 0.0
+        for v, coeff in detail:
+            print('\t{} : {:.2f} * {:.2f} = {:.2f}'.format(v.name, v.varValue, coeff, v.varValue * coeff))
+            total += v.varValue * coeff
+        print('Total : {:.2f}'.format(total))
+        print('Surplus : {:.2f}'.format(total - requirement_items[item]))
 
 
 if __name__ == '__main__':
